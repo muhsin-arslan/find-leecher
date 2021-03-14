@@ -1,0 +1,77 @@
+﻿@page "/"
+@layout MainLayout
+@inject IJSRuntime JsRuntime;
+
+<section>
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="text-info">Find Leechers!</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="form-group col-md-6">
+            <label for="torrentSiteUrl">Torrent Site URL</label>
+            <input class="form-control" type="url" id="torrentSiteUrl" @bind="_torrentSiteUrl">
+        </div>
+
+        <div class="form-group col-md-6">
+            <label for="minimumLeecher">Minimum Leecher</label>
+            <input class="form-control" type="number" id="minimumLeecher" @bind="_minimumLeecher">
+        </div>
+
+        <div class="form-group col-md-12">
+            <button class="btn btn-block btn-success" @onclick="DownloadSource">Find Leeche Boogie!</button>
+        </div>
+    </div>
+</section>
+
+@if (_torrentLinks != null && _torrentLinks.Count > 0)
+{
+    <section>
+        <div class="row">
+            <div class="col-md-12">
+                <h2 class="text-success">Torrent Amount: @_torrentLinks.Count</h2>
+            </div>
+
+            <div class="col-md-12">
+                <button class="btn btn-danger" @onclick="DownloadAllFiles">Download All</button>
+            </div>
+
+            <div class="col-md-12">
+                <ul class="mt-5">
+                    @foreach (var torrentLink in _torrentLinks)
+                    {
+                        <li>
+                            <a href="@torrentLink">@torrentLink</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </section>
+}
+
+
+@code{
+    private string _torrentSiteUrl = "";
+    private int _minimumLeecher = 0;
+    private List<string> _torrentLinks;
+
+    private async Task DownloadSource()
+    {
+        if (string.IsNullOrEmpty(_torrentSiteUrl)) return;
+
+        _torrentLinks = null;
+        _torrentLinks = await LeecherService.GetTorrents(_torrentSiteUrl, _minimumLeecher);
+        _torrentSiteUrl = "";
+        _minimumLeecher = 0;
+    }
+
+    private async Task DownloadAllFiles()
+    {
+        if (_torrentLinks != null && _torrentLinks.Count > 0)
+            await JsRuntime.InvokeVoidAsync("openWindow", _torrentLinks);
+    }
+
+}
